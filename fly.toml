@@ -1,0 +1,76 @@
+# Fly.io app configuration.
+#
+# First-time setup:
+#   fly launch --no-deploy   # generates app name, sets region, connects to your account
+#   fly volumes create planner_data --region sin --size 1
+#   fly secrets set CLERK_SECRET_KEY=... CLERK_JWKS_URL=... CLERK_ISSUER=... SECRET_KEY=...
+#   fly deploy
+#
+# On every deploy:
+#   fly deploy   # runs release_command (migrations) before rolling to new instances
+#
+# Fly.io picks the app name from `fly launch`; edit this file after that runs
+# and you'll see `app = "your-app-name-here"` at the top. Left as a placeholder
+# so this file is checked in without leaking a specific account's name.
+
+app = "REPLACE-ME"  # set by `fly launch`
+primary_region = "sin"  # Singapore — closest to NUS
+
+[build]
+  # Uses backend/Dockerfile by default.
+
+[env]
+  # Non-secret env vars go here. Secrets (Clerk keys, session secret) via `fly secrets set`.
+  DATABASE_PATH = "/data/planner.db"
+  NUSMODS_ACAD_YEAR = "2024-2025"
+  # CORS_ORIGINS should be your frontend URL(s). Multiple comma-separated.
+  # Example: CORS_ORIGINS = "https://nus-planner.vercel.app,https://your-custom-domain.com"
+
+[processes]
+  app = "gunicorn --bind 0.0.0.0:8080 --workers 2 --threads 4 --access-logfile - --error-logfile - app:app"
+
+# Run migrations before switching traffic to new instances. If this fails,
+# the deploy is aborted and old instances keep serving. This is the pattern
+# that makes zero-downtime schema changes safe.
+[deploy]
+  release_command = "python migrate.py apply"
+
+[[mounts]]
+  source = "planner_data"  # matches `fly volumes create planner_data`
+  destination = "/data"
+
+[[services]]
+  internal_port = 8080
+  protocol = "tcp"
+  auto_stop_machines = "stop"   # save money — spin down when idle
+  auto_start_machines = true
+  min_machines_running = 0
+
+  [[services.ports]]
+    port = 80
+    handlers = ["http"]
+    force_https = true
+
+  [[services.ports]]
+    port = 443
+    handlers = ["tls", "http"]
+
+  [services.concurrency]
+    type = "requests"
+    hard_limit = 100
+    soft_limit = 80
+
+  # Health check — Fly polls this. If it fails, the instance is removed from
+  # rotation and eventually replaced. The `/api/health` endpoint returns 503
+  # if the DB is unreachable (see app.py).
+  [[services.http_checks]]
+    interval = "30s"
+    timeout = "5s"
+    grace_period = "10s"
+    method = "get"
+    path = "/api/health"
+    protocol = "http"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "256mb"

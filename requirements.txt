@@ -1,0 +1,8 @@
+Flask==3.0.3
+flask-cors==4.0.1
+python-dotenv==1.0.1
+requests==2.32.3
+# For real Clerk JWT verification (used by auth.py when CLERK_SECRET_KEY is set)
+PyJWT[crypto]==2.9.0
+# Production WSGI server. Dev uses `flask run`, prod uses gunicorn (see Dockerfile).
+gunicorn==22.0.0

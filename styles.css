@@ -1,0 +1,96 @@
+:root {
+  --paper: #faf6ee;
+  --paper-soft: #f3ede0;
+  --ink: #1f2733;
+  --ink-soft: #6e6a5e;
+  --border: #d8cfbd;
+  --border-soft: #e8e0cf;
+  --accent: #c26b1f;
+  --accent-deep: #9d4f12;
+  --warn: #a33a2e;
+}
+
+* { box-sizing: border-box; }
+
+html, body, #root {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+}
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: 'Manrope', system-ui, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  background-image: radial-gradient(ellipse at top, rgba(194,107,31,0.04), transparent 60%);
+}
+
+a { color: var(--ink); text-decoration: none; }
+a:hover { color: var(--accent); }
+
+button { font-family: inherit; cursor: pointer; }
+
+input:focus, select:focus, button:focus-visible {
+  outline: 1px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.font-display {
+  font-family: 'Fraunces', serif;
+  letter-spacing: -0.01em;
+}
+
+.font-mono {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--ink-soft); }
+
+/* ----------------------------------------------------------------
+ * Mobile (≤768px) baseline tweaks. Page-level layout decisions live
+ * inline in each page (via useIsMobile); these are the global rules
+ * that don't fit cleanly into inline styles: input zoom prevention,
+ * scrollbar density, bottom-tab safe-area, viewport overflow guards.
+ * ---------------------------------------------------------------- */
+
+@media (max-width: 768px) {
+  body {
+    /* Keep nominal font-size; pages set their own scale. The important rule
+       here is that interactive inputs need ≥16px to prevent iOS from
+       zooming the viewport on focus (the WebKit auto-zoom heuristic). */
+    font-size: 14px;
+  }
+  input, select, textarea {
+    font-size: 16px;       /* iOS zoom-prevention threshold */
+  }
+  /* Reserve safe space for the bottom tab bar — see App.jsx <MobileTabBar />.
+     We don't pad <main> because some pages have full-bleed scrollers; the
+     tab bar instead reserves vertical room via a sibling placeholder. */
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+
+  /* Smaller touch-friendly tap targets on tab links etc. inherit from inline
+     styles in each component; we ensure the global default <button> isn't
+     too aggressive. */
+  button { min-height: 36px; }
+
+  /* Slightly tighten the page gradient background so it doesn't fight
+     a small viewport visually. */
+  body {
+    background-image: radial-gradient(ellipse at top, rgba(194,107,31,0.03), transparent 70%);
+  }
+}
+
+/* iOS safe-area inset support — usable via env(safe-area-inset-bottom) in
+ * inline styles. The viewport meta in index.html should include
+ * viewport-fit=cover for this to take effect. */
+@supports (padding: max(0px)) {
+  body {
+    /* No-op; safe-area is consumed by the tab bar itself. Declaring the
+       feature query here documents the dependency. */
+  }
+}
