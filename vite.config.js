@@ -3,10 +3,10 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig({
   plugins: [react()],
+  base: '/nusmods-remake/', //
   server: {
     port: 5173,
     proxy: {
-      // Proxy /api to the Flask backend in dev — avoids CORS hassle entirely.
       '/api': {
         target: 'http://localhost:5000',
         changeOrigin: true,
